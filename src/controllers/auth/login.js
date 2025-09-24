@@ -13,9 +13,25 @@ export const login = async (req, res) => {
     }
     
     const result = await pool.query(
-        'SELECT person_id, name, email, password_hash, role, emp_id FROM people WHERE email=$1',
+        `
+  SELECT
+      p.person_id,
+      p.name,
+      p.email,
+      p.password_hash,
+      p.role,
+      p.emp_id,
+      p.organisation_id,
+      o.name AS organisation_name,
+      o.code AS organisation_code
+  FROM people p
+  JOIN organisations o
+    ON p.organisation_id = o.organisation_id
+  WHERE p.email = $1
+  `,
         [email]
     );
+    
     const user = result.rows[0];
     if (!user) return res.status(401).json({ message: 'Invalid credentials' });
     
@@ -28,7 +44,10 @@ export const login = async (req, res) => {
             name: user.name,
             email: user.email,
             emp_id: user.emp_id,
-            role: user.role
+            role: user.role,
+            organisation_id: user.organisation_id,
+            organisation_name: user.organisation_name,
+            organisation_code: user.organisation_code
         },
         process.env.JWT_SECRET || "hackathon_secret"
     );
