@@ -1,12 +1,15 @@
 import express from "express";
 import "express-async-error";
 import dotenv from "dotenv";
+import cors from "cors";
 import { pool } from './config/db.js';
 import routes from "./src/routes/index.js";
 
 dotenv.config();
 
 const app = express();
+
+app.use(cors());
 app.use(express.json());
 
 // Global error handler
@@ -15,6 +18,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: err.message });
 });
 
+app.get('/', (req, res) => res.send('Welcome to Attendly'));
 // Test DB connection `on startup
 try {
     const res = await pool.query('SELECT NOW()');
