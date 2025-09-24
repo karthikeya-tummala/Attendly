@@ -5,4 +5,4 @@ import { GetStudents, GetStudentsByClass } from "../controllers/students/index.j
 export const StudentRouter = express.Router();
 
 StudentRouter.get('/:organisation_code', GetStudents);
-StudentRouter.get('/:organisation_code/:class_id', GetStudentsByClass);
+StudentRouter.get('/:class_id', GetStudentsByClass);
