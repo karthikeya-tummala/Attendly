@@ -13,7 +13,7 @@ export const login = async (req, res) => {
     }
     
     const result = await pool.query(
-        'SELECT person_id, email, password_hash, role FROM people WHERE email=$1',
+        'SELECT person_id, name, email, password_hash, role, emp_id FROM people WHERE email=$1',
         [email]
     );
     const user = result.rows[0];
