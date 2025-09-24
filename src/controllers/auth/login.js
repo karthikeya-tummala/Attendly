@@ -5,6 +5,13 @@ import jwt from "jsonwebtoken";
 export const login = async (req, res) => {
     const { email, password } = req.body;
     
+    if (!email || !password) {
+        return res.status(400).json({
+            success: false,
+            message: "Missing Required Fields!!!"
+        });
+    }
+    
     const result = await pool.query(
         'SELECT person_id, email, password_hash, role FROM people WHERE email=$1',
         [email]
