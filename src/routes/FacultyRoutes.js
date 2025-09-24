@@ -3,4 +3,4 @@ import { GetFacultyScheduleToday } from "../controllers/faculty/index.js";
 
 export const FacultyRouter = express.Router();
 
-FacultyRouter.get('/get_today_schedule/:organisation_code/:emp_id', GetFacultyScheduleToday);
+FacultyRouter.get('/get_today_schedule/:organisation_code/:emp_id/:day_of_week', GetFacultyScheduleToday);

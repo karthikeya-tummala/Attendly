@@ -1,10 +1,10 @@
 import { pool } from '../../../config/db.js';
 
 export const GetFacultyScheduleToday = async (req, res) => {
-    const { organisation_code, emp_id } = req.params;
-    console.log("Cache not used");
-    if (!organisation_code || !emp_id) {
-        return res.status(400).json({ error: 'organisation_code and emp_id required' });
+    const { organisation_code, emp_id, day_of_week } = req.params;
+    console.log(organisation_code, emp_id, day_of_week);
+    if (!organisation_code || !emp_id || !day_of_week) {
+        return res.status(400).json({ error: 'organisation_code, emp_id, and day_of_week are required' });
     }
     
     try {
@@ -13,27 +13,21 @@ export const GetFacultyScheduleToday = async (req, res) => {
             'SELECT organisation_id FROM organisations WHERE code = $1',
             [organisation_code]
         );
-        if (!orgRes.rows.length) {
-            return res.status(404).json({ error: 'Organisation not found' });
-        }
-        const orgId = orgRes.rows[0].organisation_id;
+        if (!orgRes.rows.length) return res.status(404).json({ error: 'Organisation not found' });
         
-        // Get teacher's person_id
-        const teacherRes = await pool.query(
+        const organisationId = orgRes.rows[0].organisation_id;
+        
+        // Get person_id for the employee in that organisation
+        const facultyRes = await pool.query(
             'SELECT person_id FROM people WHERE emp_id = $1 AND organisation_id = $2',
-            [emp_id, orgId]
+            [emp_id, organisationId]
         );
-        if (!teacherRes.rows.length) {
-            return res.status(404).json({ error: 'Faculty not found' });
-        }
-        const teacherId = teacherRes.rows[0].person_id;
+        if (!facultyRes.rows.length) return res.status(404).json({ error: 'Faculty not found' });
         
-        // Compute ISO day_of_week (Monday=1, Sunday=7)
-        const dayOfWeek = new Date().getDay(); // Sunday=0
-        const isoDay = dayOfWeek === 0 ? 7 : dayOfWeek;
+        const facultyId = facultyRes.rows[0].person_id;
         
-        // Get today's schedules first, then filter by teacher
-        const { rows } = await pool.query(
+        // Fetch schedules for the given day
+        const scheduleRes = await pool.query(
             `SELECT sc.schedule_id,
                     sc.slot, sc.location,
                     c.class_id, c.name AS class_name,
@@ -44,12 +38,12 @@ export const GetFacultyScheduleToday = async (req, res) => {
              WHERE sc.day_of_week = $1
                AND sc.teacher_id = $2
              ORDER BY sc.slot`,
-            [isoDay, teacherId]
+            [day_of_week, facultyId]
         );
         
-        return res.status(200).json({ schedule: rows });
-    } catch (e) {
-        console.error('Error fetching faculty schedule:', e);
+        return res.status(200).json({ schedule: scheduleRes.rows });
+    } catch (err) {
+        console.error('Error fetching schedule:', err);
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 };
