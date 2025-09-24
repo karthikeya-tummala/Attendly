@@ -2,6 +2,7 @@ import express from "express";
 import "express-async-error";
 import dotenv from "dotenv";
 import { pool } from './config/db.js';
+import routes from "./src/routes/index.js";
 
 dotenv.config();
 
@@ -14,7 +15,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: err.message });
 });
 
-// Test DB connection on startup
+// Test DB connection `on startup
 try {
     const res = await pool.query('SELECT NOW()');
     console.log('Postgres is up:', res.rows[0]);
@@ -24,3 +25,6 @@ try {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+routes(app);
+export default app;
