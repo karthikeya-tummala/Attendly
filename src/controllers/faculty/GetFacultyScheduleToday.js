@@ -2,7 +2,7 @@ import { pool } from '../../../config/db.js';
 
 export const GetFacultyScheduleToday = async (req, res) => {
     const { organisation_code, emp_id } = req.params;
-    
+    console.log("Cache not used");
     if (!organisation_code || !emp_id) {
         return res.status(400).json({ error: 'organisation_code and emp_id required' });
     }
