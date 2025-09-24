@@ -164,3 +164,55 @@ UNION ALL
 SELECT organisation_id, '2025-08-15'::DATE, 'Independence Day' FROM organisations
 UNION ALL
 SELECT organisation_id, '2025-10-02'::DATE, 'Gandhi Jayanti' FROM organisations;
+
+ALTER TABLE people
+    ADD COLUMN roll_no VARCHAR(20) UNIQUE;
+
+ALTER TABLE people
+    ADD COLUMN emp_id VARCHAR(20) UNIQUE;
+
+
+ALTER TABLE people DROP CONSTRAINT IF EXISTS student_roll_no_check;
+ALTER TABLE people DROP CONSTRAINT IF EXISTS teacher_emp_id_check;
+
+ALTER TABLE people
+    ADD CONSTRAINT student_roll_no_check
+        CHECK (role='student' OR roll_no IS NULL);
+
+ALTER TABLE people
+    ADD CONSTRAINT teacher_emp_id_check
+        CHECK (role='teacher' OR emp_id IS NULL);
+
+-- =======================================
+-- Update student roll numbers (10-char alphanumeric)
+-- =======================================
+DO $$
+    DECLARE
+        stu RECORD;
+        roll VARCHAR(10);
+    BEGIN
+        FOR stu IN SELECT person_id FROM people WHERE role='student' LOOP
+                roll := substring(md5(random()::text) from 1 for 10); -- random 10 chars
+                UPDATE people
+                SET roll_no = roll
+                WHERE person_id = stu.person_id;
+            END LOOP;
+    END $$;
+
+-- =======================================
+-- Update teacher employee IDs (5-char alphanumeric)
+-- =======================================
+DO $$
+    DECLARE
+        tch RECORD;
+        eid VARCHAR(5);
+    BEGIN
+        FOR tch IN SELECT person_id FROM people WHERE role='teacher' LOOP
+                eid := substring(md5(random()::text) from 1 for 5); -- random 5 chars
+                UPDATE people
+                SET emp_id = eid
+                WHERE person_id = tch.person_id;
+            END LOOP;
+    END $$;
+
+ALTER TABLE people ADD COLUMN password_hash VARCHAR(255);
