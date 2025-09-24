@@ -18,7 +18,7 @@ export const GetFacultyScheduleToday = async (req, res) => {
         }
         const orgId = orgRes.rows[0].organisation_id;
         
-        // Get teacher_id from emp_id
+        // Get teacher's person_id
         const teacherRes = await pool.query(
             'SELECT person_id FROM people WHERE emp_id = $1 AND organisation_id = $2',
             [emp_id, orgId]
@@ -28,20 +28,23 @@ export const GetFacultyScheduleToday = async (req, res) => {
         }
         const teacherId = teacherRes.rows[0].person_id;
         
-        // Get today’s day_of_week (ISO: Monday=1, Sunday=7)
+        // Compute ISO day_of_week (Monday=1, Sunday=7)
+        const dayOfWeek = new Date().getDay(); // Sunday=0
+        const isoDay = dayOfWeek === 0 ? 7 : dayOfWeek;
+        
+        // Get today's schedules first, then filter by teacher
         const { rows } = await pool.query(
             `SELECT sc.schedule_id,
+                    sc.slot, sc.location,
                     c.class_id, c.name AS class_name,
-                    co.course_id, co.name AS course_name, co.code AS course_code,
-                    sc.slot, sc.location
+                    co.course_id, co.name AS course_name, co.code AS course_code
              FROM schedules sc
              JOIN classes c ON sc.class_id = c.class_id
              JOIN courses co ON c.course_id = co.course_id
-             WHERE sc.teacher_id = $1
-               AND c.organisation_id = $2
-               AND sc.day_of_week = EXTRACT(ISODOW FROM CURRENT_DATE)
+             WHERE sc.day_of_week = $1
+               AND sc.teacher_id = $2
              ORDER BY sc.slot`,
-            [teacherId, orgId]
+            [isoDay, teacherId]
         );
         
         return res.status(200).json({ schedule: rows });
